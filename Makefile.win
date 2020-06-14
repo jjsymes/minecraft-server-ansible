@@ -1,0 +1,28 @@
+.PHONY: default
+
+default: # default target
+	type Makefile.win
+
+bundle: # install gems
+	chef exec bundle install
+
+kitchen_create: bundle # create
+	chef exec bundle exec kitchen create
+
+kitchen_converge: bundle # converge
+	chef exec bundle exec kitchen converge
+
+kitchen_verify: bundle # verify
+	chef exec bundle exec kitchen verify
+
+kitchen_test: bundle # test
+	chef exec bundle exec kitchen test
+
+kitchen_destroy: bundle # destroy
+	chef exec bundle exec kitchen destroy
+
+kitchen_login: # login
+	chef exec bundle exec kitchen login
+
+variables: # prints interesting variables
+	@echo 'ROOT_DIR =               $(ROOT_DIR)'

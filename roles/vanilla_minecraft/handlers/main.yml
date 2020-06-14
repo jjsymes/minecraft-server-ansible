@@ -1,0 +1,17 @@
+---
+- name: Restart Minecraft
+  service:
+    name: minecraft
+    state: restarted
+  become: yes
+
+- name: Enable service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  with_items:
+    - minecraft.service
+    - minecraft.socket
+  become: yes
+...

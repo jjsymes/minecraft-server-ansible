@@ -1,0 +1,14 @@
+*.working*
+.localipaddress
+*.retry
+#  Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Ruby and Chef
+.kitchen
+.bundle
+vendor

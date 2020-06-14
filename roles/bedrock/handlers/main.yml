@@ -1,0 +1,17 @@
+---
+- name: Restart Bedrock
+  service:
+    name: bedrock
+    state: restarted
+  become: yes
+
+- name: Enable Bedrock service
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  with_items:
+    - bedrock.service
+    - bedrock.socket
+  become: yes
+...

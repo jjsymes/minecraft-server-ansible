@@ -1,0 +1,40 @@
+---
+- name: Minecraft server
+  hosts: all
+  vars: 
+    required_packages: ['default-jre', 'unzip', 'systemd', 'python-jmespath']
+    optional_packages: ['vim']
+    enable_minecraft_server: True
+    enable_bedrock_server: True
+    minecraft_user: minecraft
+    minecraft_group: "{{ minecraft_user }}"
+    minecraft_home: /opt/minecraftserver
+    minecraft_server_dir: "{{ minecraft_home }}/minecraft"
+    bedrock_dir: "{{ minecraft_home }}/bedrock"
+    bedrock_version: "1.14.60.5"
+    vanilla_minecraft_version_manifest_url: https://launchermeta.mojang.com/mc/game/version_manifest.json
+    vanilla_minecraft_version: latest
+    minecraft_max_memory: 1024M
+    minecraft_initial_memory: 1024M
+    supported_ansible_os_families:
+      - Debian
+  tasks:
+    - name: check for supported OS
+      assert:
+        that:
+          - "ansible_os_family in supported_ansible_os_families"
+
+    - name: Run common tasks
+      include_role:
+        name: common
+
+    - name: Vanilla minecraft server
+      include_role:
+        name: vanilla_minecraft
+      when: "enable_minecraft_server == True"
+
+    - name: Bedrock minecraft server
+      include_role:
+        name: bedrock
+      when: "enable_bedrock_server == True"
+...

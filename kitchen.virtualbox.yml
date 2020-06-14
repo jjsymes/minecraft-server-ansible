@@ -1,0 +1,36 @@
+---
+driver:
+  name: vagrant
+
+verifier:
+  name: inspec
+  sudo_path: true
+
+platforms:
+  - name: minecraft-server-ubuntu
+    driver:
+      box: bento/ubuntu-18.04
+      provider: virtualbox
+      memory: 2048
+      cpus: 2
+      network:
+        - ["forwarded_port", {guest: 25565, host: 25565, protocol: "tcp"}]
+        - ["forwarded_port", {guest: 19132, host: 19132, protocol: "udp"}]
+    provisioner:
+      name: ansible_playbook
+      roles_path: roles
+      hosts: all
+      ansible_connection: ssh
+      require_windows_support: true
+      ansible_host_key_checking: false
+      ansible_verbose: true
+      playbook: minecraft-server.yml
+      extra_vars: {}
+    verifier:
+      name: inspec
+
+suites:
+  - name: default
+    verifier:
+      inspec_tests:
+        - test/integration/default

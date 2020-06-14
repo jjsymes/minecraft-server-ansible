@@ -1,0 +1,24 @@
+[Unit]
+Description=Minecraft Server
+After=network.target
+Requires=minecraft.socket
+
+[Service]
+User={{ minecraft_user }}
+Group={{ minecraft_group }}
+WorkingDirectory={{ minecraft_server_dir }}
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+ExecStart=/usr/bin/java -Xmx{{ minecraft_max_memory }} -Xms{{ minecraft_initial_memory }} -jar minecraft_server.jar nogui
+ExecStop=/bin/sh -c "echo 'save-all' > /run/minecraft/console"
+ExecStop=/bin/sh -c "echo 'stop' > /run/minecraft/console"
+Restart=on-failure
+SuccessExitStatus=143
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target

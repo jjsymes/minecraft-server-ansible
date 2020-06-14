@@ -1,0 +1,82 @@
+---
+- name: Install Bedrock systemd units
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+    - bedrock.service
+    - bedrock.socket
+  become: yes
+  notify:
+    - Restart Bedrock
+  register: bedrock_systemd_service_config
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+  become: yes
+  when: bedrock_systemd_service_config.changed
+
+- name: Configure Bedrock console directory
+  template:
+    src: tmpfiles.d/bedrock.conf.j2
+    dest: "/etc/tmpfiles.d/bedrock.conf"
+    owner: root
+    group: root
+    mode: 0644
+  become: yes
+
+- name: Check if Bedrock tmpfile exists
+  stat:
+    path: /etc/tmpfiles.d/bedrock.conf
+  register: bedrock_tmpfile
+
+- name: Create Bedrock console directory
+  command: systemd-tmpfiles --create /etc/tmpfiles.d/bedrock.conf
+  become: yes
+  when: bedrock_tmpfile.stat.islnk
+
+- name: Ensure Bedrock directory exists
+  file:
+    path: "{{ bedrock_dir }}"
+    state: directory
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+  become: yes
+
+- name: Download and unarchive Bedrock zip
+  unarchive:
+    src: https://minecraft.azureedge.net/bin-linux/bedrock-server-{{ bedrock_version }}.zip
+    dest: '{{ bedrock_dir }}'
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+    creates: '{{ bedrock_dir }}/worlds'
+    keep_newer: yes
+    remote_src: yes
+  become: yes
+
+# TODO Get worlds folder from backup
+
+- name: Copy Bedrock server config files
+  copy:
+    src: "{{ item }}"
+    dest: '{{ bedrock_dir }}'
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+  become: yes
+  with_items: ['permissions.json','server.properties','whitelist.json']
+  notify:
+    - Restart Bedrock
+
+- name: Ensure Bedrock is running
+  service:
+    name: bedrock
+    state: started
+    enabled: true
+  become: yes
+...

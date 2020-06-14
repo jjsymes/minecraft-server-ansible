@@ -1,0 +1,122 @@
+---
+- name: Install systemd units
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+    - minecraft.service
+    - minecraft.socket
+  become: yes
+  notify:
+    - Restart Minecraft
+  register: systemd_service_config
+
+- name: Reload systemd
+  command: systemctl daemon-reload
+  become: yes
+  when: systemd_service_config.changed
+
+- name: Configure console directory
+  template:
+    src: tmpfiles.d/minecraft.conf.j2
+    dest: "/etc/tmpfiles.d/minecraft.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
+
+- name: Check if tmpfile exists
+  stat:
+    path: /etc/tmpfiles.d/minecraft.conf
+  register: minecraft_tmpfile
+
+- name: Create console directory
+  command: systemd-tmpfiles --create /etc/tmpfiles.d/minecraft.conf
+  become: yes
+  when: minecraft_tmpfile.stat.islnk
+
+- name: Ensure Minecraft server directory exists
+  file:
+    path: "{{ minecraft_server_dir }}"
+    state: directory
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+  become: yes
+
+- name: Retrieve version manifest
+  uri:
+    url: "{{ vanilla_minecraft_version_manifest_url }}"
+    return_content: true
+  register: version_manifest
+
+- name: Get the latest minecraft version
+  set_fact:
+    vanilla_minecraft_version_latest: "{{ (version_manifest.content | from_json).latest.release }}"
+  when: vanilla_minecraft_version == 'latest'
+
+- name: Retrieve version metadata
+  uri:
+    url: "{{ ((version_manifest.content | from_json) | json_query(version_metadata_url_query))[0] }}"
+    return_content: true
+  vars:
+    version_metadata_url_query: "versions[?id=='{{ vanilla_minecraft_version_latest | default(vanilla_minecraft_version) }}'].url"
+  register: version_metadata
+
+- name: Get the minecraft download url
+  set_fact:
+    vanilla_minecraft_download_url: "{{ (version_metadata.content | from_json).downloads.server.url }}"
+
+- name: Download Minecraft server
+  get_url:
+    url: "{{ vanilla_minecraft_download_url }}"
+    dest: "{{ minecraft_server_dir }}/minecraft_server.{{ vanilla_minecraft_version_latest | default(vanilla_minecraft_version) }}.jar"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+  become: yes
+
+- name: Copy Java Minecraft Server config files
+  copy:
+    src: "{{ item }}"
+    dest: '{{ minecraft_server_dir }}'
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+  with_items: ['server.properties','whitelist.json', 'ops.json']
+  become: yes
+
+# TODO download world from a source
+
+- name: Agree to EULA for java minecraft server
+  copy:
+    src: eula.txt
+    dest: '{{ minecraft_server_dir }}/eula.txt'
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0644
+  become: yes
+  notify:
+    - Enable service
+
+- name: Symlink Minecraft server
+  file:
+    src: "{{ minecraft_server_dir }}/minecraft_server.{{ vanilla_minecraft_version_latest | default(vanilla_minecraft_version) }}.jar"
+    path: "{{ minecraft_server_dir }}/minecraft_server.jar"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    state: link
+  become: yes
+  notify:
+    - Restart Minecraft
+
+- name: Ensure Minecraft is running
+  service:
+    name: minecraft
+    state: started
+    enabled: true
+  become: yes
+...

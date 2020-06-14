@@ -1,0 +1,25 @@
+[Unit]
+Description=Bedrock Server
+After=network.target
+Requires=bedrock.socket
+
+[Service]
+User={{ minecraft_user }}
+Group={{ minecraft_group }}
+WorkingDirectory={{ bedrock_dir }}
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+ExecStart=/bin/sh -c "./bedrock_server LD_LIBRARY_PATH=."
+ExecStop=/bin/sh -c "echo 'stop' > /run/bedrock/console"
+Restart=on-failure
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=full
+PrivateTmp=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target
