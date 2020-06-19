@@ -55,6 +55,11 @@ This is an Ansible project that enables provissioning of a minecraft server. The
 TODO:
 
 * back up scripts https://skarlso.github.io/2016/04/16/minecraft-server-aws-s3-backup/
+* backup to s3 script
+* download world url s3
+* bedrock back up scripts https://skarlso.github.io/2016/04/16/minecraft-server-aws-s3-backup/
+* bedrock backup to s3 script
+* bedrock download world url s3
 * back up integration with aws/Azure/both optional?
 
 # Last error
