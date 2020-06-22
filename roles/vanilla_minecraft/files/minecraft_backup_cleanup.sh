@@ -7,12 +7,10 @@ max_number_of_backups=3
 
 ############
 ## TODO
-# Add max copies parameter option
 # get list for different worlds
 ############
 
-
-args=$(getopt -l backup-dir:,dry-run,help -o b:h -- "$@") || exit
+args=$(getopt -l backup-dir:,dry-run,help -o b:n:h -- "$@") || exit
 eval set -- "$args"
 while [ "$1"  != -- ]; do
 	case $1 in
@@ -20,18 +18,24 @@ while [ "$1"  != -- ]; do
 		backup_dir=$2
 		shift 2
 		;;
+	-n)
+	max_number_of_backups=$2
+	shift 2
+	;;
 	--dry-run)
 		dry_run=true
 		shift 1
 		;;
 	--help|-h)
 		echo "$syntax"
-		echo Clean up backup files for Minecraft.
+		echo "Clean up backup files for Minecraft."
 		echo
-		echo Optional arguments:
-		echo '-b, --backup-dir=BACKUP_DIR  directory backups go in. defaults to ~.'
+		echo "Optional arguments:"
+		echo "-b, --backup-dir=BACKUP_DIR  directory backups go in (defaults to ~)."
+		echo "-n                           number of backups to keep (defaults to 3)."
+		echo "--dry-run"
 		echo
-		echo 'Backups should be in the format {WORLD}_Backup-{YEAR}_{MONTH}_{DATE}_{TIME}.zip in BACKUP_DIR.'
+		echo "Backups should be in the format {WORLD}_Backup-{YEAR}_{MONTH}_{DATE}_{TIME}.zip in BACKUP_DIR."
 		exit
 		;;
 	esac
@@ -53,10 +57,18 @@ fi
 
 success_message() {
 	echo
-	echo Cleanup ran sucessfully.
+	echo "Cleanup ran sucessfully."
+	echo
 }
 
-echo BACKUP_DIR: $backup_dir
+echo
+echo "#########################################"
+echo "Minecraft server backup cleanup tool"
+echo "#########################################"
+echo
+
+echo "BACKUP_DIR: $backup_dir"
+echo "Maximum number of backups: $max_number_of_backups"
 
 cd $backup_dir
 
@@ -66,7 +78,6 @@ done
 
 IFS=$'\n' files=($(sort -r <<<"${unsorted_files[*]}")); unset IFS
 
-echo
 echo "Current files in the directory: ${files[*]}"
 echo
 
@@ -82,12 +93,11 @@ fi
 files_after_cleanup_count=$((file_count - files_to_remove_count))
 
 if [ $file_count -le $max_number_of_backups ]; then
-	echo
-	echo There there are already too few backups to clean up.
+	echo "There there are already too few backups to clean up."
 	success_message
 	exit
 	elif [ $files_after_cleanup_count -ne $max_number_of_backups ]; then
-	>&2 echo Something went horribly wrong. The remaining files after cleanup would of been less that what is configured. Cleanup CANCELLED!
+	>&2 echo "Something went horribly wrong. The remaining files after cleanup would of been less that what is configured. Cleanup CANCELLED!"
 	exit 1
 fi
 
