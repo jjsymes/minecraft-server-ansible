@@ -3,24 +3,26 @@
 set -e
 syntax='Usage: minecraft_backup_cleanup.sh [OPTION]'
 
-max_number_of_backups=2
+max_number_of_backups=3
 
 ############
 ## TODO
 # Add max copies parameter option
 # get list for different worlds
-# remove
-# dry run option
 ############
 
 
-args=$(getopt -l backup-dir:,help -o b:h -- "$@") || exit
+args=$(getopt -l backup-dir:,dry-run,help -o b:h -- "$@") || exit
 eval set -- "$args"
 while [ "$1"  != -- ]; do
 	case $1 in
 	--backup-dir|-b)
 		backup_dir=$2
 		shift 2
+		;;
+	--dry-run)
+		dry_run=true
+		shift 1
 		;;
 	--help|-h)
 		echo "$syntax"
@@ -49,11 +51,25 @@ else
 	backup_dir=~
 fi
 
+success_message() {
+	echo
+	echo Cleanup ran sucessfully.
+}
+
 echo BACKUP_DIR: $backup_dir
 
 cd $backup_dir
 
-files=($(ls | egrep -i '.*._Backup-[0-9][0-9][0-9][0-9]_[0-1][0-9]_[0-3][0-9]_[0-9][0-9]-[0-9][0-9].zip' | sort -r))
+for file in *_Backup-[0-9][0-9][0-9][0-9]_[0-1][0-9]_[0-3][0-9]_[0-9][0-9]-[0-9][0-9].zip; do
+	unsorted_files+=($file)
+done
+
+IFS=$'\n' files=($(sort -r <<<"${unsorted_files[*]}")); unset IFS
+
+echo
+echo "Current files in the directory: ${files[*]}"
+echo
+
 files_to_remove=(${files[@]:$max_number_of_backups})
 file_count=${#files[@]}
 
@@ -66,12 +82,23 @@ fi
 files_after_cleanup_count=$((file_count - files_to_remove_count))
 
 if [ $file_count -le $max_number_of_backups ]; then
-	echo There there are already too few backups to clean up. Clean up SUCCESS!
+	echo
+	echo There there are already too few backups to clean up.
+	success_message
 	exit
 	elif [ $files_after_cleanup_count -ne $max_number_of_backups ]; then
-	>&2 echo Something went horribly wrong. The remaining files after cleanup would of been less that what is configured. Clean up CANCELLED!
+	>&2 echo Something went horribly wrong. The remaining files after cleanup would of been less that what is configured. Cleanup CANCELLED!
 	exit 1
 fi
 
-echo "Current files in the directory: ${files[*]}"
-echo "Removing the following files: ${files_to_remove[*]}"
+for file in ${files_to_remove[*]}; do
+	if [ "$dry_run" = true ]; then
+		echo "DRY RUN -> Removed $file"
+	else
+		rm -f $file
+		echo "Removed $file"
+	fi
+done
+
+success_message
+exit
