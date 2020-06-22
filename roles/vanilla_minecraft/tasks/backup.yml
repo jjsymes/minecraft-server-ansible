@@ -1,0 +1,18 @@
+---
+- name: Setup backup scripts
+  template:
+    src: minecraft_backup.sh.j2
+    dest: "{{ minecraft_home }}/minecraft_backup.sh"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+
+- name: Setup cron job for backup scripts
+  cron:
+    name: minecraft backup
+    minute: "0"
+    hour: "04"
+    user: "{{ minecraft_user }}"
+    job: "{{ minecraft_home }}/minecraft_backup.sh {{ minecraft_server_dir }} minecraft.service"
+    cron_file: minecraft-backup
+...

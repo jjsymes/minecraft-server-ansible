@@ -119,4 +119,7 @@
     state: started
     enabled: true
   become: yes
+
+- name: Setup backup scripts
+  include_tasks: backup.yml
 ...

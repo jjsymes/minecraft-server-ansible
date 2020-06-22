@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+
+set -e
+syntax='Usage: minecraft_backup.sh [OPTION] ... SERVER_DIR SERVICE'
+
+time=$(date +%H-%M)
+date=$(date +%d)
+month=$(date +%m)
+year=$(date +%Y)
+
+server_do() {
+	timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+	echo "$*" > "/run/minecraft/console"
+}
+
+countdown() {
+	warning="Server backing up in $*"
+	server_do say "$warning"
+	echo "$warning"
+}
+
+server_read() {
+	# Wait for output
+	sleep 1
+	if [ -z "$timestamp" ]; then
+		timestamp=$(systemctl show "$service" -p ActiveEnterTimestamp --value | cut -d ' ' -f 2-3 -s)
+	fi
+	# Output of $service since $timestamp with no metadata
+	buffer=$(journalctl -u "$service" -S "$timestamp" -o cat)
+}
+
+args=$(getopt -l backup-dir:,help -o b:h -- "$@") || exit
+eval set -- "$args"
+while [ "$1"  != -- ]; do
+	case $1 in
+	--backup-dir|-b)
+		backup_dir=$2
+		shift 2
+		;;
+	--help|-h)
+		echo "$syntax"
+		echo Back up Minecraft Java Edition server world running in service.
+		echo
+		echo Mandatory arguments to long options are mandatory for short options too.
+		echo '-b, --backup-dir=BACKUP_DIR  directory backups go in. defaults to ~.'
+		echo
+		echo 'Backups are {SERVER_DIR}_Backups/{WORLD}_Backup-{YEAR}_{MONTH}_{DATE}_{TIME}.zip in BACKUP_DIR.'
+		exit
+		;;
+	esac
+done
+shift
+
+if [ "$#" -lt 2 ]; then
+	>&2 echo Not enough arguments
+	>&2 echo "$syntax"
+	exit 1
+elif [ "$#" -gt 2 ]; then
+	>&2 echo Too many arguments
+	>&2 echo "$syntax"
+	exit 1
+fi
+
+server_dir=${1%/}
+properties=$server_dir/server.properties
+world=$(grep 'level-name=' "$properties" | awk -F"=" '{print $2}' | tr -d '\r' | tr -d '\n')
+if [ ! -d "$server_dir/$world" ]; then
+	>&2 echo "No world $world in $server_dir, check level-name in server.properties too"
+	exit 1
+fi
+
+echo World: $world
+
+service=$2
+echo Service: $service
+status=$(systemctl show "$service" -p ActiveState --value)
+if [ "$status" != active ]; then
+	>&2 echo "Service $service not active"
+	exit 1
+fi
+
+if [ -n "$backup_dir" ]; then
+	backup_dir=$(realpath "$backup_dir")
+else
+	backup_dir=~
+fi
+
+echo BACKUP_DIR: $backup_dir
+
+mkdir -p "$backup_dir"
+backup_zip=$backup_dir/${world}_Backup-${year}_${month}_${date}_${time}
+
+echo backup_zip: $backup_zip
+
+server_read
+# If save was off
+if [ -n "$buffer" ]; then
+	# The last line that matches either is the current save state
+	state=$(echo "$buffer" | grep -E 'Automatic saving is now (disabled|enabled)' | tail -n 1)
+	if echo "$state" | grep -q 'Automatic saving is now disabled'; then
+		>&2 echo Save off, is a backup in progress?
+		exit 1
+	fi
+fi
+
+countdown 10 seconds
+sleep 7
+countdown 3 seconds
+sleep 1
+countdown 2 seconds
+sleep 1
+countdown 1 second
+sleep 1
+server_do say 0
+
+# Disable autosave
+server_do save-off
+trap 'server_do save-on' ERR
+
+# Pause and save the server
+server_do save-all flush
+timeout=0
+unset buffer
+
+until echo "$buffer" | grep -q 'Saved the game'; do
+	# 1 minute timeout because server_read sleeps 1 second
+	if [ "$timeout" = 60 ]; then
+		server_do save resume
+		>&2 echo save query timeout
+		exit 1
+	fi
+	server_read
+	timeout=$(( ++timeout ))
+done
+
+cd "$server_dir"
+trap 'server_do save-on; rm -f "$backup_zip"' ERR
+zip -r "$backup_zip" "$world"
+echo "Backup is saved at $backup_zip"
+server_do save-on
+server_do say "Server backed up successfully."

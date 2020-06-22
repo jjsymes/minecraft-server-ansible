@@ -2,7 +2,7 @@
 - name: Minecraft server
   hosts: all
   vars: 
-    required_packages: ['default-jre', 'unzip', 'systemd', 'python-jmespath']
+    required_packages: ['default-jre', 'unzip', 'systemd', 'python-jmespath', 'zip']
     optional_packages: ['vim']
     enable_minecraft_server: True
     enable_bedrock_server: True
