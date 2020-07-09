@@ -5,17 +5,16 @@ syntax='Usage: minecraft_backup_cleanup.sh [OPTION]'
 
 max_number_of_backups=3
 
-############
-## TODO
-# get list for different worlds
-############
-
-args=$(getopt -l backup-dir:,dry-run,help -o b:n:h -- "$@") || exit
+args=$(getopt -l backup-dir:,level-name:,dry-run,help -o b:l:n:h -- "$@") || exit
 eval set -- "$args"
 while [ "$1"  != -- ]; do
 	case $1 in
 	--backup-dir|-b)
 		backup_dir=$2
+		shift 2
+		;;
+	--level-name|-l)
+		level_name=$2
 		shift 2
 		;;
 	-n)
@@ -32,6 +31,7 @@ while [ "$1"  != -- ]; do
 		echo
 		echo "Optional arguments:"
 		echo "-b, --backup-dir=BACKUP_DIR  directory backups go in (defaults to ~)."
+		echo "-l  --level-name=LEVEL_NAME  level name of the backups (defaults to *)."
 		echo "-n                           number of backups to keep (defaults to 3)."
 		echo "--dry-run"
 		echo
@@ -55,6 +55,10 @@ else
 	backup_dir=~
 fi
 
+if [ -z "$level_name" ]; then
+	level_name=*
+fi
+
 success_message() {
 	echo
 	echo "Cleanup ran sucessfully."
@@ -72,7 +76,7 @@ echo "Maximum number of backups: $max_number_of_backups"
 
 cd $backup_dir
 
-for file in *_Backup-[0-9][0-9][0-9][0-9]_[0-1][0-9]_[0-3][0-9]_[0-9][0-9]-[0-9][0-9].zip; do
+for file in ${level_name}_Backup-[0-9][0-9][0-9][0-9]_[0-1][0-9]_[0-3][0-9]_[0-9][0-9]-[0-9][0-9].zip; do
 	unsorted_files+=($file)
 done
 
