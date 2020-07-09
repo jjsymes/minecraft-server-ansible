@@ -1,5 +1,5 @@
 ---
-- name: Setup backup scripts
+- name: Setup backup script
   template:
     src: minecraft_backup.sh.j2
     dest: "{{ minecraft_home }}/minecraft_backup.sh"
@@ -15,4 +15,21 @@
     user: "{{ minecraft_user }}"
     job: "{{ minecraft_home }}/minecraft_backup.sh {{ minecraft_server_dir }} minecraft.service"
     cron_file: minecraft-backup
+
+- name: Setup backup cleanup script
+  copy:
+    src: minecraft_backup_cleanup.sh
+    dest: "{{ minecraft_home }}/minecraft_backup_cleanup.sh"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+
+- name: Setup cron job for backup cleanup script
+  cron:
+    name: minecraft backup cleanup
+    minute: "0"
+    hour: "12"
+    user: "{{ minecraft_user }}"
+    job: "{{ minecraft_home }}/minecraft_backup_cleanup.sh"
+    cron_file: minecraft-backup-cleanup
 ...

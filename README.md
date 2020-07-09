@@ -12,14 +12,14 @@ This is an Ansible project that enables provissioning of a minecraft server. The
 3.  Test on windows using 'Makefile.win' Makefile e.g. `make -f Makefile.win kitchen_converge`
 
 * On linux
-1.	Have ChefDK and virtualbox installed to test playbook using kitchen.
+1.	Have ChefDK (4.9.7 tested) and virtualbox installed to test playbook using kitchen.
 2.  Test using 'Makefile' Makefile e.g. `make kitchen_converge`
 
 # Build and Test
 
-* run `make -f .\Makefile.win ansible_converge` to build the test kitchen box.
-* run `make -f .\Makefile.win ansible_test` to run test lifecycle.
-* to run tests on linux run `make ansible_test`
+* run `make -f .\Makefile.win kitchen_converge` to build the test kitchen box.
+* run `make -f .\Makefile.win kitchen_test` to run test lifecycle.
+* to run tests on linux run `make kitchen_test`
 
 # Resources
 
