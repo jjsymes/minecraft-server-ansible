@@ -77,7 +77,9 @@ echo "Maximum number of backups: $max_number_of_backups"
 cd $backup_dir
 
 for file in ${level_name}_Backup-[0-9][0-9][0-9][0-9]_[0-1][0-9]_[0-3][0-9]_[0-9][0-9]-[0-9][0-9].zip; do
-	unsorted_files+=($file)
+	if ! [ "$file" == "${level_name}_Backup-[0-9][0-9][0-9][0-9]_[0-1][0-9]_[0-3][0-9]_[0-9][0-9]-[0-9][0-9].zip" ]; then
+		unsorted_files+=($file)
+	fi
 done
 
 IFS=$'\n' files=($(sort -r <<<"${unsorted_files[*]}")); unset IFS
