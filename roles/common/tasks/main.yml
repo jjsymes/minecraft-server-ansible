@@ -13,7 +13,9 @@
   become: yes
 
 - name: Get optional packages
-  apt: name={{ optional_packages }} state=present
+  apt: 
+    name: "{{ optional_packages }}"
+    state: present
   become: yes
 
 - name: Ensure Minecraft user group exists
