@@ -1,0 +1,4 @@
+---
+bedrock_dir: "{{ minecraft_home }}/bedrock"
+bedrock_version: "1.14.60.5"
+...

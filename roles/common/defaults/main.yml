@@ -1,0 +1,4 @@
+---
+required_packages: ['default-jre', 'unzip', 'systemd', 'python-jmespath', 'zip']
+optional_packages: ['vim']
+...
