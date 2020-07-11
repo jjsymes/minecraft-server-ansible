@@ -3,4 +3,5 @@ vanilla_minecraft_version_manifest_url: https://launchermeta.mojang.com/mc/game/
 vanilla_minecraft_version: latest
 minecraft_max_memory: 1024M
 minecraft_initial_memory: 1024M
+minecraft_level_source_url: ''
 ... 

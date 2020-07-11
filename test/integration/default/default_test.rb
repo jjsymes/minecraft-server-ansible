@@ -19,7 +19,7 @@ describe crontab(path: '/etc/cron.d/minecraft-backup') do
 end
 
 describe crontab(path: '/etc/cron.d/minecraft-backup-cleanup') do
-  its('commands') { should include '/opt/minecraftserver/minecraft_backup_cleanup.sh' }
+  its('commands.to_s') { should include '/opt/minecraftserver/minecraft_backup_cleanup.sh' }
   its('minutes') { should cmp '0' }
   its('hours') { should cmp '12' }
   its('days') { should cmp '*' }

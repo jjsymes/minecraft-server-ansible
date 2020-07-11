@@ -79,17 +79,40 @@
     mode: 0755
   become: yes
 
-- name: Copy Java Minecraft Server config files
+- name: Download and unarchive Minecraft level
+  unarchive:
+    src: "{{ minecraft_level_source_url }}"
+    dest: "{{ minecraft_server_dir }}/{{ minecraft_level_source_url | regex_search(^.*[^.]{5}$) }}"
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+    keep_newer: yes
+    remote_src: yes
+  when: minecraft_level_source_url|length > 0
+  become: yes
+
+- name: Copy Java Minecraft Server static config files
   copy:
     src: "{{ item }}"
     dest: '{{ minecraft_server_dir }}'
     owner: "{{ minecraft_user }}"
     group: "{{ minecraft_group }}"
     mode: 0755
-  with_items: ['server.properties','whitelist.json', 'ops.json']
+  with_items: ['whitelist.json', 'ops.json']
   become: yes
+  notify:
+    - Restart Minecraft
 
-# TODO download world from a source
+- name: Generate Java Minecraft Server properties file
+  template:
+    src: "server.properties.j2"
+    dest: '{{ minecraft_server_dir }}/server.properties'
+    owner: "{{ minecraft_user }}"
+    group: "{{ minecraft_group }}"
+    mode: 0755
+  become: yes
+  notify:
+    - Restart Minecraft
 
 - name: Agree to EULA for java minecraft server
   copy:

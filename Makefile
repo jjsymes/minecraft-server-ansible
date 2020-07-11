@@ -28,7 +28,7 @@ kitchen_destroy: bundle # destroy
 
 kitchen_login: # login
 	export KITCHEN_YAML="./kitchen.virtualbox.yml"; \
-	chef exec bundle exec kitchen kitchen_login
+	chef exec bundle exec kitchen login
 
 git_mirror: # mirror the repo to git hub
 	git push --mirror https://github.com/jjsymes/minecraft-server-ansible.git

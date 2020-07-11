@@ -30,6 +30,6 @@
     minute: "0"
     hour: "12"
     user: "{{ minecraft_user }}"
-    job: "{{ minecraft_home }}/minecraft_backup_cleanup.sh"
+    job: "{{ minecraft_home }}/minecraft_backup_cleanup.sh --level-name {{ minecraft_level_name }}"
     cron_file: minecraft-backup-cleanup
 ...
