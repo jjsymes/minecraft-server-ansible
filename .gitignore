@@ -12,3 +12,5 @@
 .kitchen
 .bundle
 vendor
+
+.DS_Store
