@@ -12,6 +12,7 @@ verifier:
   name: inspec
   sudo_path: true
 
+# see https://github.com/neillturner/kitchen-ansible/blob/master/provisioner_options.md for options
 provisioner:
   name: ansible_playbook
   roles_path: roles
@@ -21,6 +22,7 @@ provisioner:
   ansible_host_key_checking: false
   ansible_verbose: true
   playbook: minecraft-server.yml
+  additional_copy_path: ['test_fixtures']
   extra_vars: {}
 
 platforms:
@@ -35,9 +37,9 @@ suites:
     verifier:
       inspec_tests:
         - test/integration/default
-  - name: minecraft-server-vanilla-with-aws-s3
+  - name: minecraft-server-vanilla-with-existing-world
     provisioner:
-      extra_vars: { minecraft_level_source_url: '', enable_minecraft_server: True, enable_bedrock_server: True}
+      extra_vars: { minecraft_level_source_url: 'file:///tmp/kitchen/test_fixtures/DefaultMinecraftVanillaWorld_Backup-2020_07_18_13-29.zip', enable_minecraft_server: True, enable_bedrock_server: True}
     verifier:
       inspec_tests:
         - test/integration/default

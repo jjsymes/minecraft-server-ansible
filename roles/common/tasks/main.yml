@@ -30,6 +30,7 @@
     name: "{{ minecraft_user }}"
     comment: The minecraft user.
     group: "{{ minecraft_group }}"
+    groups: ["{{ minecraft_group }}", "systemd-journal"]
     home: "{{ minecraft_home }}"
     system: yes
   become: yes
