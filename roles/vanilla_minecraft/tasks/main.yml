@@ -81,7 +81,8 @@
 
 - name: Get S3 minecraft download url
   set_fact:
-    minecraft_level_source_url: "{{ minecraft_level_source_url }}"
+    minecraft_level_source_url: "{{ s3_bucket_url }}/{{ minecraft_level_name }}"
+  when: s3_bucket_url|length > 0
 
 - name: Download and unarchive Minecraft level
   unarchive:

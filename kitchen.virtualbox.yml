@@ -43,3 +43,9 @@ suites:
     verifier:
       inspec_tests:
         - test/integration/default
+  - name: minecraft-server-vanilla-with-s3
+    provisioner:
+      extra_vars: { s3_bucket_url: 's3_bucket_url', enable_minecraft_server: True, enable_bedrock_server: True}
+    verifier:
+      inspec_tests:
+        - test/integration/default

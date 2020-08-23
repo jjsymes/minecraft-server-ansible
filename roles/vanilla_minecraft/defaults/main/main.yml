@@ -4,4 +4,5 @@ vanilla_minecraft_version: latest
 minecraft_max_memory: 1024M
 minecraft_initial_memory: 1024M
 minecraft_level_source_url: ''
+s3_bucket_url: ''
 ... 

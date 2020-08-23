@@ -139,3 +139,9 @@ zip -r "$backup_zip" "$world"
 echo "Backup is saved at $backup_zip"
 server_do save-on
 server_do say "Server backed up successfully."
+
+{% if s3_bucket_url|length > 0 %}
+cd $backup_dir
+echo "Uploading backup to S3 bucket: {{ s3_bucket_url }} => {{ s3_bucket_url }}/{{ minecraft_level_name }}"
+echo "Backup successfully uploaded."
+{% endif %}
